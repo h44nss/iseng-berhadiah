@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teka-Teki Berhadiah</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        width: 90%;
+        max-width: 600px;
+        margin-top: 20px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #4b0082;
+      }
+      .puzzle-container {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .puzzle {
+        font-size: 18px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+      }
+      .answer-form {
+        display: flex;
+        flex-direction: column;
+      }
+      input[type="text"] {
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+      button {
+        background-color: #4b0082;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #6a0dad;
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .reward-container {
+        text-align: center;
+        margin-top: 20px;
+        display: none;
+        padding: 15px;
+        background-color: #e8f5e9;
+        border-radius: 10px;
+        border: 2px solid #4caf50;
+      }
+      .prize-amount {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2e7d32;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+      .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .progress-container {
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+      .progress-bar {
+        width: 0%;
+        height: 25px;
+        background-color: #4b0082;
+        border-radius: 5px;
+        text-align: center;
+        line-height: 25px;
+        color: white;
+      }
+      .puzzle-level {
+        text-align: right;
+        color: #666;
+        margin-bottom: 10px;
+      }
+      .winner-notice {
+        text-align: center;
+        color: red;
+        font-weight: bold;
+        margin-top: 15px;
+        display: none;
+      }
+      .ai-warning {
+        background-color: #ffebee;
+        border: 1px solid #f44336;
+        color: #d32f2f;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        display: none;
+      }
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(75, 0, 130, 0.3);
+        border-radius: 50%;
+        border-top-color: #4b0082;
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 10px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .error-message {
+        color: #f44336;
+        margin-top: 10px;
+        text-align: center;
+        display: none;
+      }
+    </style>
+
+    <!-- Import Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Teka-Teki Berhadiah</h1>
+        <p>Jawab dengan benar dan menangkan hadiah uang tunai!</p>
+        <div class="winner-notice" id="winnerNotice">
+          Hadiah sudah dimenangkan oleh pemain lain.
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar">0%</div>
+      </div>
+
+      <div class="puzzle-container">
+        <div class="puzzle-level">
+          Level: <span id="levelDisplay">1</span>/5
+        </div>
+        <div class="puzzle" id="puzzleText">
+          Aku selalu ada tapi tidak bisa dilihat, tidak bisa disentuh, hanya
+          bisa dirasakan. Siapakah aku?
+        </div>
+        <div class="answer-form">
+          <input
+            type="text"
+            id="answerInput"
+            placeholder="Masukkan jawaban Anda..." />
+          <div class="ai-warning" id="aiWarning">
+            Terdeteksi penggunaan AI atau salin-tempel! Harap jawab dengan
+            pengetahuan Anda sendiri.
+          </div>
+          <button id="submitButton">Kirim Jawaban</button>
+        </div>
+      </div>
+
+      <div class="reward-container" id="rewardContainer">
+        <h2>Selamat! Anda Menang!</h2>
+        <p>Anda telah berhasil menyelesaikan semua teka-teki</p>
+        <p>Hadiah Anda:</p>
+        <div class="prize-amount" id="prizeAmount">Rp 50.000</div>
+        <p>Silahkan klik tombol di bawah untuk mengklaim hadiah Anda</p>
+        <button id="claimButton">Klaim Hadiah</button>
+      </div>
+    </div>
+
+    <div id="claimModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h2>Formulir Klaim Hadiah</h2>
+        <p>Silahkan isi data diri Anda:</p>
+        <div class="form-group">
+          <label for="name">Nama Lengkap:</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Masukkan nama lengkap"
+            style="width: 100%; padding: 8px" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Nomor WhatsApp:</label>
+          <input
+            type="text"
+            id="phone"
+            placeholder="Contoh: 081234567890"
+            style="width: 100%; padding: 8px" />
+        </div>
+        <div class="form-group">
+          <label for="bank">Bank:</label>
+          <input
+            type="text"
+            id="bank"
+            placeholder="Nama bank"
+            style="width: 100%; padding: 8px" />
+        </div>
+        <div class="form-group">
+          <label for="account">Nomor Rekening:</label>
+          <input
+            type="text"
+            id="account"
+            placeholder="Nomor rekening"
+            style="width: 100%; padding: 8px" />
+        </div>
+        <button id="submitClaim" style="width: 100%">
+          Kirim Data
+          <span id="submitLoader" class="loading" style="display: none"></span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Set to false untuk tidak menggunakan Firebase
+      let useFirebase = false;
+
+      // Firebase Configuration
+      const firebaseConfig = {
+        // Ganti dengan konfigurasi Firebase Anda
+        apiKey: "AIzaSyYourApiKey",
+        authDomain: "puzzle-game-winner.firebaseapp.com",
+        databaseURL: "https://puzzle-game-winner-default-rtdb.firebaseio.com",
+        projectId: "puzzle-game-winner",
+        storageBucket: "puzzle-game-winner.appspot.com",
+        messagingSenderId: "yourMessagingSenderId",
+        appId: "yourAppId",
+      };
+
+      // Inisialisasi Firebase - dengan handling kesalahan untuk GitHub Pages
+      let firebaseApp;
+      let database;
+
+      if (useFirebase) {
+        try {
+          firebaseApp = firebase.initializeApp(firebaseConfig);
+          database = firebase.database();
+        } catch (error) {
+          console.error("Error initializing Firebase:", error);
+          useFirebase = false;
+          document.getElementById("errorMessage").textContent =
+            "Terjadi kesalahan dalam menghubungkan ke database. Menggunakan penyimpanan lokal.";
+          document.getElementById("errorMessage").style.display = "block";
+        }
+      } else {
+        // Tampilkan pesan bahwa menggunakan penyimpanan lokal
+        document.getElementById("errorMessage").textContent =
+          "Menggunakan penyimpanan lokal untuk game ini.";
+        document.getElementById("errorMessage").style.display = "block";
+      }
+
+      // Konstanta penting
+      const developerWhatsApp = "6289637734491"; // Ganti dengan nomor WA developer yang sebenarnya
+
+      // Data teka-teki
+      const puzzles = [
+        {
+          question:
+            "Aku selalu ada tapi tidak bisa dilihat, tidak bisa disentuh, hanya bisa dirasakan. Siapakah aku?",
+          answer: "udara",
+          alternativeAnswers: ["udara", "angin", "oksigen", "atmosfer"],
+        },
+        {
+          question:
+            "Semakin banyak kamu ambil dariku, semakin besar aku menjadi. Apakah aku?",
+          answer: "lubang",
+          alternativeAnswers: ["lubang", "galian", "sumur"],
+        },
+        {
+          question: "Aku punya mata tapi tidak bisa melihat. Siapakah aku?",
+          answer: "jarum",
+          alternativeAnswers: ["jarum", "jarum jahit", "peniti"],
+        },
+        {
+          question:
+            "Aku adalah sesuatu yang bisa ada di dalam dirimu, tetapi jika kau mencariku di cermin, aku tidak pernah terlihat.",
+          answer: "kenangan yang terlupakan",
+          alternativeAnswers: [
+            "kenangan yang terlupakan",
+            "memori yang hilang",
+            "ingatan yang terhapus",
+          ],
+        },
+        {
+          question:
+            "Aku tidak ada saat kau mencariku, tapi aku selalu muncul saat kau sudah lelah",
+          answer: "typo fatal",
+          alternativeAnswers: ["typo fatal", "kesalahan fatal", "error kritis"],
+        },
+      ];
+
+      // Variabel untuk pelacakan level dan hadiah
+      let currentLevel = 0;
+      const prizeAmount = "Rp 50.000";
+      let hasWinner = false;
+
+      // Variabel untuk deteksi AI/digital platforms
+      let startTime = 0;
+      let keyPressCount = 0;
+      let typingPattern = [];
+      let aiDetectionCount = 0;
+      let lastInputValue = "";
+      let inputChangeMethod = "typed"; // 'typed', 'pasted', or 'autofilled'
+
+      // ID unik untuk sesi permainan ini
+      const gameSessionId =
+        Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+      // Periksa status pemenang dari serverside - diperbarui untuk menangani kasus tanpa Firebase
+      async function checkWinnerStatusFromServer() {
+        // Selalu periksa localStorage terlebih dahulu
+        if (localStorage.getItem("puzzleGameWinner")) {
+          hasWinner = true;
+          document.getElementById("winnerNotice").style.display = "block";
+          return true;
+        }
+
+        // Jika Firebase tidak digunakan, cukup gunakan localStorage
+        if (!useFirebase) {
+          return false;
+        }
+
+        // Jika Firebase digunakan, periksa dari database
+        try {
+          const snapshot = await database.ref("winner").once("value");
+          const data = snapshot.val();
+
+          if (data && data.claimed === true) {
+            hasWinner = true;
+            document.getElementById("winnerNotice").style.display = "block";
+
+            if (currentLevel >= puzzles.length) {
+              document.getElementById("claimButton").disabled = true;
+              document.getElementById("claimButton").textContent =
+                "Hadiah Sudah Diklaim";
+            }
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Error checking winner status:", error);
+          return localStorage.getItem("puzzleGameWinner") ? true : false;
+        }
+      }
+
+      // Set status pemenang ke server - diperbarui untuk menangani kasus tanpa Firebase
+      async function setWinnerStatusOnServer(winnerData) {
+        // Selalu set ke localStorage
+        localStorage.setItem("puzzleGameWinner", "true");
+
+        // Jika Firebase tidak digunakan, cukup gunakan localStorage
+        if (!useFirebase) {
+          return true;
+        }
+
+        // Jika Firebase digunakan, update database
+        try {
+          await database.ref("winner").set({
+            claimed: true,
+            timestamp: Date.now(),
+            sessionId: gameSessionId,
+            winner: winnerData,
+          });
+          return true;
+        } catch (error) {
+          console.error("Error setting winner status:", error);
+          return true; // Tetap kembalikan true karena localStorage sudah diupdate
+        }
+      }
+
+      // Elemen HTML
+      const puzzleText = document.getElementById("puzzleText");
+      const answerInput = document.getElementById("answerInput");
+      const submitButton = document.getElementById("submitButton");
+      const rewardContainer = document.getElementById("rewardContainer");
+      const prizeAmountElement = document.getElementById("prizeAmount");
+      const claimButton = document.getElementById("claimButton");
+      const claimModal = document.getElementById("claimModal");
+      const closeModal = document.getElementById("closeModal");
+      const submitClaim = document.getElementById("submitClaim");
+      const progressBar = document.getElementById("progressBar");
+      const levelDisplay = document.getElementById("levelDisplay");
+      const winnerNotice = document.getElementById("winnerNotice");
+      const aiWarning = document.getElementById("aiWarning");
+      const submitLoader = document.getElementById("submitLoader");
+      const errorMessage = document.getElementById("errorMessage");
+
+      // Memperbarui teka-teki
+      function updatePuzzle() {
+        if (currentLevel < puzzles.length) {
+          puzzleText.textContent = puzzles[currentLevel].question;
+          levelDisplay.textContent = currentLevel + 1;
+          updateProgressBar();
+
+          // Reset deteksi AI ketika teka-teki baru
+          startTime = Date.now();
+          keyPressCount = 0;
+          typingPattern = [];
+          inputChangeMethod = "typed";
+          aiWarning.style.display = "none";
+        } else {
+          showReward();
+        }
+      }
+
+      // Memperbarui progress bar
+      function updateProgressBar() {
+        const progress = (currentLevel / puzzles.length) * 100;
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = Math.round(progress) + "%";
+      }
+
+      // Menampilkan reward
+      async function showReward() {
+        // Periksa apakah sudah ada pemenang
+        const winnerExists = await checkWinnerStatusFromServer();
+
+        if (winnerExists) {
+          alert("Maaf, hadiah sudah dimenangkan oleh pemain lain.");
+          winnerNotice.style.display = "block";
+          claimButton.disabled = true;
+          claimButton.textContent = "Hadiah Sudah Diklaim";
+          rewardContainer.style.display = "block";
+          return;
+        }
+
+        rewardContainer.style.display = "block";
+        prizeAmountElement.textContent = prizeAmount;
+      }
+
+      // Fungsi untuk mendeteksi penggunaan AI
+      function detectAIUsage() {
+        let aiUsageDetected = false;
+        const currentValue = answerInput.value.trim();
+        const elapsedTime = Date.now() - startTime;
+
+        // Deteksi 1: Waktu menjawab terlalu cepat (kurang dari 3 detik) dengan jawaban benar
+        if (elapsedTime < 3000 && currentValue.length > 0) {
+          if (
+            puzzles[currentLevel].alternativeAnswers.includes(
+              currentValue.toLowerCase()
+            )
+          ) {
+            aiUsageDetected = true;
+          }
+        }
+
+        // Deteksi 2: Paste detection
+        if (inputChangeMethod === "pasted") {
+          aiUsageDetected = true;
+        }
+
+        // Deteksi 3: Auto-fill detection
+        if (inputChangeMethod === "autofilled") {
+          aiUsageDetected = true;
+        }
+
+        // Deteksi 4: Pola ketikan tidak natural
+        if (typingPattern.length > 3) {
+          // Hitung interval ketikan rata-rata
+          let typingIntervals = [];
+          for (let i = 1; i < typingPattern.length; i++) {
+            typingIntervals.push(typingPattern[i] - typingPattern[i - 1]);
+          }
+
+          // Standard deviation terlalu kecil = terlalu konsisten = kemungkinan copy-paste atau AI
+          const avgInterval =
+            typingIntervals.reduce((a, b) => a + b, 0) / typingIntervals.length;
+          const variance =
+            typingIntervals.reduce(
+              (a, b) => a + Math.pow(b - avgInterval, 2),
+              0
+            ) / typingIntervals.length;
+          const stdDev = Math.sqrt(variance);
+
+          // Jika standard deviation terlalu kecil (terlalu konsisten)
+          if (typingIntervals.length > 5 && stdDev < 50) {
+            aiUsageDetected = true;
+          }
+        }
+
+        // Deteksi 5: Perubahan jawaban mendadak
+        if (
+          lastInputValue !== "" &&
+          currentValue !== "" &&
+          !currentValue.startsWith(lastInputValue) &&
+          !lastInputValue.startsWith(currentValue)
+        ) {
+          aiUsageDetected = true;
+        }
+
+        // Simpan nilai input terakhir
+        lastInputValue = currentValue;
+
+        return aiUsageDetected;
+      }
+
+      // Memeriksa jawaban - diperbarui dengan error handling
+      async function checkAnswer() {
+        try {
+          console.log("checkAnswer dipanggil"); // Debug log
+
+          // Jika sudah ada pemenang, periksa dulu
+          await checkWinnerStatusFromServer();
+
+          if (hasWinner) {
+            alert("Maaf, hadiah sudah dimenangkan oleh pemain lain.");
+            winnerNotice.style.display = "block";
+            return;
+          }
+
+          const userAnswer = answerInput.value.trim().toLowerCase();
+          console.log("Jawaban user:", userAnswer); // Debug log
+
+          // Deteksi penggunaan AI
+          if (detectAIUsage()) {
+            aiDetectionCount++;
+            aiWarning.style.display = "block";
+
+            // Jika terdeteksi menggunakan AI terlalu sering
+            if (aiDetectionCount >= 3) {
+              alert(
+                "Jawaban ditolak. Terdeteksi penggunaan AI atau alat bantu digital. Silakan jawab dengan pengetahuan sendiri!"
+              );
+              return;
+            }
+          } else {
+            aiWarning.style.display = "none";
+          }
+
+          const currentPuzzle = puzzles[currentLevel];
+          console.log("Level saat ini:", currentLevel); // Debug log
+          console.log(
+            "Jawaban yang diterima:",
+            currentPuzzle.alternativeAnswers
+          ); // Debug log
+
+          if (currentPuzzle.alternativeAnswers.includes(userAnswer)) {
+            alert("Jawaban Benar! 👏");
+            currentLevel++;
+            answerInput.value = "";
+
+            if (currentLevel < puzzles.length) {
+              updatePuzzle();
+            } else {
+              await showReward();
+            }
+          } else {
+            alert("Jawaban Salah. Coba lagi!");
+          }
+        } catch (error) {
+          console.error("Error dalam checkAnswer:", error);
+          alert("Terjadi kesalahan saat memeriksa jawaban. Silakan coba lagi.");
+        }
+      }
+
+      // Mengirim data ke WhatsApp developer
+      async function sendDataToDeveloper() {
+        try {
+          // Tampilkan loading spinner
+          submitLoader.style.display = "inline-block";
+          submitClaim.disabled = true;
+
+          // Periksa apakah sudah ada pemenang
+          const winnerExists = await checkWinnerStatusFromServer();
+
+          if (winnerExists) {
+            submitLoader.style.display = "none";
+            submitClaim.disabled = false;
+            alert(
+              "Maaf, hadiah sudah dimenangkan oleh pemain lain. Coba lagi lain waktu."
+            );
+            claimModal.style.display = "none";
+            return;
+          }
+
+          const name = document.getElementById("name").value;
+          const phone = document.getElementById("phone").value;
+          const bank = document.getElementById("bank").value;
+          const account = document.getElementById("account").value;
+
+          if (!name || !phone || !bank || !account) {
+            submitLoader.style.display = "none";
+            submitClaim.disabled = false;
+            alert("Mohon lengkapi semua data!");
+            return;
+          }
+
+          // Buat data pemenang
+          const winnerData = {
+            name: name,
+            phone: phone,
+            bank: bank,
+            account: account,
+            timestamp: Date.now(),
+          };
+
+          // Set status pemenang
+          const serverUpdateSuccess = await setWinnerStatusOnServer(winnerData);
+
+          // Kirim data ke WhatsApp
+          const message = `*Klaim Hadiah Teka-Teki*%0A%0ANama: ${name}%0ANomor WA: ${phone}%0ABank: ${bank}%0ANo Rekening: ${account}%0AHadiah: ${prizeAmount}%0ASession ID: ${gameSessionId}`;
+          const whatsappURL = `https://wa.me/${developerWhatsApp}?text=${message}`;
+          window.open(whatsappURL, "_blank");
+
+          alert(
+            "Selamat! Anda adalah pemenang pertama. Data berhasil dikirim! Hadiah Anda akan segera diproses."
+          );
+
+          submitLoader.style.display = "none";
+          submitClaim.disabled = false;
+          claimModal.style.display = "none";
+
+          // Disable tombol klaim
+          claimButton.disabled = true;
+          claimButton.textContent = "Hadiah Sudah Diklaim";
+
+          // Set notice bahwa sudah ada pemenang
+          winnerNotice.style.display = "block";
+        } catch (error) {
+          console.error("Error dalam sendDataToDeveloper:", error);
+          submitLoader.style.display = "none";
+          submitClaim.disabled = false;
+          alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
+        }
+      }
+
+      // Event Listeners - dengan lebih banyak error handling
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM Loaded");
+
+        // Debug log untuk memastikan semua elemen ditemukan
+        console.log("submitButton:", submitButton);
+        console.log("answerInput:", answerInput);
+        console.log("claimButton:", claimButton);
+
+        // Tambahkan event listener dengan error handling
+        if (submitButton) {
+          submitButton.addEventListener("click", function () {
+            console.log("Submit button diklik");
+            checkAnswer();
+          });
+        } else {
+          console.error("Submit button tidak ditemukan");
+        }
+
+        if (answerInput) {
+          answerInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+              console.log("Enter key ditekan di input");
+              checkAnswer();
+            }
+
+            // Rekam pola ketikan
+            keyPressCount++;
+            typingPattern.push(Date.now());
+            inputChangeMethod = "typed";
+          });
+
+          // Deteksi paste
+          answerInput.addEventListener("paste", function () {
+            console.log("Paste terdeteksi");
+            inputChangeMethod = "pasted";
+          });
+
+          // Deteksi auto-fill
+          answerInput.addEventListener("input", function (e) {
+            if (
+              e.inputType === "insertReplacementText" ||
+              (!e.inputType && keyPressCount === 0)
+            ) {
+              console.log("Autofill terdeteksi");
+              inputChangeMethod = "autofilled";
+            }
+          });
+        } else {
+          console.error("Answer input tidak ditemukan");
+        }
+
+        // Deteksi fokus keluar
+        window.addEventListener("blur", function () {
+          if (document.activeElement !== answerInput) {
+            inputChangeMethod = "suspicious";
+          }
+        });
+
+        if (claimButton) {
+          claimButton.addEventListener("click", async function () {
+            console.log("Claim button diklik");
+            // Periksa lagi status pemenang sebelum membuka modal
+            const winnerExists = await checkWinnerStatusFromServer();
+
+            if (winnerExists) {
+              alert(
+                "Maaf, hadiah sudah dimenangkan oleh pemain lain. Coba lagi lain waktu."
+              );
+              return;
+            }
+            claimModal.style.display = "block";
+          });
+        }
+
+        if (closeModal) {
+          closeModal.addEventListener("click", function () {
+            claimModal.style.display = "none";
+          });
+        }
+
+        if (submitClaim) {
+          submitClaim.addEventListener("click", function () {
+            console.log("Submit claim diklik");
+            sendDataToDeveloper();
+          });
+        }
+
+        window.addEventListener("click", function (event) {
+          if (event.target === claimModal) {
+            claimModal.style.display = "none";
+          }
+        });
+
+        // Periksa status pemenang secara berkala (kurangi frekuensi jika tidak menggunakan Firebase)
+        const checkInterval = useFirebase ? 10000 : 30000; // 10 detik dengan Firebase, 30 detik tanpa Firebase
+        setInterval(async function () {
+          await checkWinnerStatusFromServer();
+        }, checkInterval);
+
+        // Inisialisasi
+        console.log("Inisialisasi aplikasi");
+        startTime = Date.now();
+        // Periksa status pemenang dari server saat halaman dimuat
+        checkWinnerStatusFromServer().then(() => {
+          updatePuzzle();
+        });
+      });
+    </script>
+  </body>
+</html>
