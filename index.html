@@ -4,182 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teka-Teki Berhadiah</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
-      body {
-        background-color: #f0f2f5;
-        margin: 0;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-      }
-      .container {
-        background-color: white;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        width: 90%;
-        max-width: 600px;
-        margin-top: 20px;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #4b0082;
-      }
-      .puzzle-container {
-        border: 1px solid #ddd;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-      }
-      .puzzle {
-        font-size: 18px;
-        line-height: 1.6;
-        margin-bottom: 15px;
-      }
-      .answer-form {
-        display: flex;
-        flex-direction: column;
-      }
-      input[type="text"] {
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        font-size: 16px;
-        margin-bottom: 15px;
-      }
-      button {
-        background-color: #4b0082;
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-      button:hover {
-        background-color: #6a0dad;
-      }
-      button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-      }
-      .reward-container {
-        text-align: center;
-        margin-top: 20px;
-        display: none;
-        padding: 15px;
-        background-color: #e8f5e9;
-        border-radius: 10px;
-        border: 2px solid #4caf50;
-      }
-      .prize-amount {
-        font-size: 24px;
-        font-weight: bold;
-        color: #2e7d32;
-      }
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-      }
-      .modal-content {
-        background-color: white;
-        margin: 15% auto;
-        padding: 20px;
-        border-radius: 10px;
-        width: 80%;
-        max-width: 500px;
-      }
-      .form-group {
-        margin-bottom: 15px;
-      }
-      .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-      .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-      .progress-container {
-        width: 100%;
-        background-color: #ddd;
-        border-radius: 5px;
-        margin-bottom: 15px;
-      }
-      .progress-bar {
-        width: 0%;
-        height: 25px;
-        background-color: #4b0082;
-        border-radius: 5px;
-        text-align: center;
-        line-height: 25px;
-        color: white;
-      }
-      .puzzle-level {
-        text-align: right;
-        color: #666;
-        margin-bottom: 10px;
-      }
-      .winner-notice {
-        text-align: center;
-        color: red;
-        font-weight: bold;
-        margin-top: 15px;
-        display: none;
-      }
-      .ai-warning {
-        background-color: #ffebee;
-        border: 1px solid #f44336;
-        color: #d32f2f;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-        display: none;
-      }
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(75, 0, 130, 0.3);
-        border-radius: 50%;
-        border-top-color: #4b0082;
-        animation: spin 1s ease-in-out infinite;
-        margin-left: 10px;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .error-message {
-        color: #f44336;
-        margin-top: 10px;
-        text-align: center;
-        display: none;
-      }
-    </style>
-
-    <!-- Import Firebase SDK -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   </head>
   <body>
     <div class="container">
@@ -270,66 +100,68 @@
         </button>
       </div>
     </div>
-
     <script>
-      // Set to false untuk tidak menggunakan Firebase
-      let useFirebase = false;
-
-      // Firebase Configuration
+      // Konfigurasi Firebase
       const firebaseConfig = {
-        // Ganti dengan konfigurasi Firebase Anda
-        apiKey: "AIzaSyYourApiKey",
-        authDomain: "puzzle-game-winner.firebaseapp.com",
-        databaseURL: "https://puzzle-game-winner-default-rtdb.firebaseio.com",
-        projectId: "puzzle-game-winner",
-        storageBucket: "puzzle-game-winner.appspot.com",
-        messagingSenderId: "yourMessagingSenderId",
-        appId: "yourAppId",
+        apiKey: "AIzaSyAzjaN0UuNeCK1GJvUyr3rMPSCvHTWaun0",
+        authDomain: "game-teka-teki-7b643.firebaseapp.com",
+        databaseURL:
+          "https://game-teka-teki-7b643-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "game-teka-teki-7b643",
+        storageBucket: "game-teka-teki-7b643.firebasestorage.app",
+        messagingSenderId: "241904025487",
+        appId: "1:241904025487:web:9330f353805542f80915fa",
+        measurementId: "G-TPL1NWP1PP",
       };
 
-      // Inisialisasi Firebase - dengan handling kesalahan untuk GitHub Pages
-      let firebaseApp;
+      // Deklarasikan variabel Firebase secara global
       let database;
+      let auth;
 
-      if (useFirebase) {
-        try {
-          firebaseApp = firebase.initializeApp(firebaseConfig);
-          database = firebase.database();
-        } catch (error) {
-          console.error("Error initializing Firebase:", error);
-          useFirebase = false;
+      // Inisialisasi Firebase
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database(); // Inisialisasi database
+        auth = firebase.auth(); // Inisialisasi auth
+        console.log("Firebase initialized successfully");
+      } catch (error) {
+        console.error("Error initializing Firebase:", error);
+        if (document.getElementById("errorMessage")) {
           document.getElementById("errorMessage").textContent =
-            "Terjadi kesalahan dalam menghubungkan ke database. Menggunakan penyimpanan lokal.";
+            "Terjadi kesalahan saat menginisialisasi Firebase. Silakan muat ulang halaman.";
           document.getElementById("errorMessage").style.display = "block";
         }
-      } else {
-        // Tampilkan pesan bahwa menggunakan penyimpanan lokal
-        document.getElementById("errorMessage").textContent =
-          "Menggunakan penyimpanan lokal untuk game ini.";
-        document.getElementById("errorMessage").style.display = "block";
       }
 
-      // Konstanta penting
-      const developerWhatsApp = "6289637734491"; // Ganti dengan nomor WA developer yang sebenarnya
+      // Fungsi untuk autentikasi anonim
+      async function initializeAuth() {
+        try {
+          await auth.signInAnonymously();
+          console.log("Berhasil masuk sebagai pengguna anonim");
+        } catch (error) {
+          console.error("Error pada autentikasi:", error);
+          throw error;
+        }
+      }
 
       // Data teka-teki
       const puzzles = [
         {
-          question:
-            "Aku selalu ada tapi tidak bisa dilihat, tidak bisa disentuh, hanya bisa dirasakan. Siapakah aku?",
-          answer: "udara",
-          alternativeAnswers: ["udara", "angin", "oksigen", "atmosfer"],
+          question: "Merek Hp apa yang gua pake?",
+          answer: "iphone 11",
+          alternativeAnswers: ["iphone 11", "iphone 12", "iphone 13"],
         },
         {
-          question:
-            "Semakin banyak kamu ambil dariku, semakin besar aku menjadi. Apakah aku?",
-          answer: "lubang",
-          alternativeAnswers: ["lubang", "galian", "sumur"],
+          question: "makanan apa yang gua suka?",
+          answer: "mie ayam",
+          alternativeAnswers: ["mie ayam", "galian", "sumur"],
         },
         {
-          question: "Aku punya mata tapi tidak bisa melihat. Siapakah aku?",
-          answer: "jarum",
-          alternativeAnswers: ["jarum", "jarum jahit", "peniti"],
+          question: "gua ganteng ga?",
+          answer: "tebak sendiri",
+          alternativeAnswers: ["tebak sendiri", "jarum jahit", "peniti"],
         },
         {
           question:
@@ -349,6 +181,9 @@
         },
       ];
 
+      // Konstanta penting
+      const developerWhatsApp = "6289637734491"; // Ganti dengan nomor WA developer yang sebenarnya
+
       // Variabel untuk pelacakan level dan hadiah
       let currentLevel = 0;
       const prizeAmount = "Rp 50.000";
@@ -366,69 +201,7 @@
       const gameSessionId =
         Date.now().toString() + Math.random().toString(36).substring(2, 9);
 
-      // Periksa status pemenang dari serverside - diperbarui untuk menangani kasus tanpa Firebase
-      async function checkWinnerStatusFromServer() {
-        // Selalu periksa localStorage terlebih dahulu
-        if (localStorage.getItem("puzzleGameWinner")) {
-          hasWinner = true;
-          document.getElementById("winnerNotice").style.display = "block";
-          return true;
-        }
-
-        // Jika Firebase tidak digunakan, cukup gunakan localStorage
-        if (!useFirebase) {
-          return false;
-        }
-
-        // Jika Firebase digunakan, periksa dari database
-        try {
-          const snapshot = await database.ref("winner").once("value");
-          const data = snapshot.val();
-
-          if (data && data.claimed === true) {
-            hasWinner = true;
-            document.getElementById("winnerNotice").style.display = "block";
-
-            if (currentLevel >= puzzles.length) {
-              document.getElementById("claimButton").disabled = true;
-              document.getElementById("claimButton").textContent =
-                "Hadiah Sudah Diklaim";
-            }
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error("Error checking winner status:", error);
-          return localStorage.getItem("puzzleGameWinner") ? true : false;
-        }
-      }
-
-      // Set status pemenang ke server - diperbarui untuk menangani kasus tanpa Firebase
-      async function setWinnerStatusOnServer(winnerData) {
-        // Selalu set ke localStorage
-        localStorage.setItem("puzzleGameWinner", "true");
-
-        // Jika Firebase tidak digunakan, cukup gunakan localStorage
-        if (!useFirebase) {
-          return true;
-        }
-
-        // Jika Firebase digunakan, update database
-        try {
-          await database.ref("winner").set({
-            claimed: true,
-            timestamp: Date.now(),
-            sessionId: gameSessionId,
-            winner: winnerData,
-          });
-          return true;
-        } catch (error) {
-          console.error("Error setting winner status:", error);
-          return true; // Tetap kembalikan true karena localStorage sudah diupdate
-        }
-      }
-
-      // Elemen HTML
+      // Elemen HTML - with safety checks
       const puzzleText = document.getElementById("puzzleText");
       const answerInput = document.getElementById("answerInput");
       const submitButton = document.getElementById("submitButton");
@@ -445,11 +218,71 @@
       const submitLoader = document.getElementById("submitLoader");
       const errorMessage = document.getElementById("errorMessage");
 
+      // Fungsi untuk menyiapkan pendengar status pemenang
+      function setupWinnerListener() {
+        if (!database) {
+          console.error("Database is not initialized.");
+          return;
+        }
+
+        database.ref("winner").on(
+          "value",
+          (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.claimed === true) {
+              console.log("Hadiah sudah diklaim oleh seseorang!");
+              hasWinner = true;
+
+              // Tampilkan notifikasi bahwa hadiah sudah diklaim
+              if (winnerNotice) {
+                winnerNotice.style.display = "block";
+              }
+
+              // Nonaktifkan tombol klaim jika pengguna telah menyelesaikan semua level
+              if (currentLevel >= puzzles.length && claimButton) {
+                claimButton.disabled = true;
+                claimButton.textContent = "Hadiah Sudah Diklaim";
+              }
+
+              // Tampilkan alert untuk memberi tahu pengguna
+              if (!localStorage.getItem("alertShown")) {
+                alert("Maaf, hadiah sudah diklaim oleh pengguna lain!");
+                localStorage.setItem("alertShown", "true");
+              }
+            }
+          },
+          (error) => {
+            console.error("Error pada pendengar Firebase:", error);
+          }
+        );
+      }
+
+      // Fungsi untuk memeriksa status pemenang dari Firebase
+      async function checkWinnerStatus() {
+        if (!database) {
+          console.error("Database is not initialized.");
+          return false;
+        }
+
+        try {
+          const snapshot = await database.ref("winner").once("value");
+          const data = snapshot.val();
+          return data && data.claimed === true;
+        } catch (error) {
+          console.error("Error saat memeriksa status pemenang:", error);
+          return false;
+        }
+      }
+
       // Memperbarui teka-teki
       function updatePuzzle() {
         if (currentLevel < puzzles.length) {
-          puzzleText.textContent = puzzles[currentLevel].question;
-          levelDisplay.textContent = currentLevel + 1;
+          if (puzzleText) {
+            puzzleText.textContent = puzzles[currentLevel].question;
+          }
+          if (levelDisplay) {
+            levelDisplay.textContent = currentLevel + 1;
+          }
           updateProgressBar();
 
           // Reset deteksi AI ketika teka-teki baru
@@ -457,7 +290,9 @@
           keyPressCount = 0;
           typingPattern = [];
           inputChangeMethod = "typed";
-          aiWarning.style.display = "none";
+          if (aiWarning) {
+            aiWarning.style.display = "none";
+          }
         } else {
           showReward();
         }
@@ -465,37 +300,94 @@
 
       // Memperbarui progress bar
       function updateProgressBar() {
-        const progress = (currentLevel / puzzles.length) * 100;
-        progressBar.style.width = progress + "%";
-        progressBar.textContent = Math.round(progress) + "%";
+        if (progressBar) {
+          const progress = (currentLevel / puzzles.length) * 100;
+          progressBar.style.width = progress + "%";
+          progressBar.textContent = Math.round(progress) + "%";
+        }
       }
 
       // Menampilkan reward
       async function showReward() {
-        // Periksa apakah sudah ada pemenang
-        const winnerExists = await checkWinnerStatusFromServer();
+        try {
+          // Periksa apakah sudah ada pemenang
+          const winnerExists = await checkWinnerStatus();
 
-        if (winnerExists) {
-          alert("Maaf, hadiah sudah dimenangkan oleh pemain lain.");
-          winnerNotice.style.display = "block";
-          claimButton.disabled = true;
-          claimButton.textContent = "Hadiah Sudah Diklaim";
-          rewardContainer.style.display = "block";
+          if (winnerExists) {
+            alert("Maaf, hadiah sudah dimenangkan oleh pemain lain.");
+            if (winnerNotice) {
+              winnerNotice.style.display = "block";
+            }
+            if (claimButton) {
+              claimButton.disabled = true;
+              claimButton.textContent = "Hadiah Sudah Diklaim";
+            }
+            if (rewardContainer) {
+              rewardContainer.style.display = "block";
+            }
+            return;
+          }
+
+          if (rewardContainer) {
+            rewardContainer.style.display = "block";
+          }
+          if (prizeAmountElement) {
+            prizeAmountElement.textContent = prizeAmount;
+          }
+        } catch (error) {
+          console.error("Error displaying reward:", error);
+          alert(
+            "Terjadi kesalahan saat menampilkan hadiah. Silakan muat ulang halaman."
+          );
+        }
+      }
+
+      // Fungsi untuk mengklaim hadiah
+      function claimPrize(winnerData) {
+        if (!database) {
+          console.error("Database is not initialized.");
           return;
         }
 
-        rewardContainer.style.display = "block";
-        prizeAmountElement.textContent = prizeAmount;
+        database
+          .ref("winner")
+          .once("value")
+          .then((snapshot) => {
+            if (snapshot.exists() && snapshot.val().claimed === true) {
+              alert("Maaf, hadiah sudah diklaim oleh pengguna lain!");
+              return;
+            }
+
+            // Jika belum ada pemenang, simpan data pemenang
+            return database.ref("winner").set({
+              claimed: true,
+              timestamp: firebase.database.ServerValue.TIMESTAMP,
+              winner: winnerData,
+              sessionId: gameSessionId,
+              deviceInfo: navigator.userAgent,
+            });
+          })
+          .then(() => {
+            alert("Selamat! Anda berhasil mengklaim hadiah!");
+          })
+          .catch((error) => {
+            console.error("Error saat mengklaim hadiah:", error);
+            alert(
+              "Terjadi kesalahan saat mengklaim hadiah. Silakan coba lagi."
+            );
+          });
       }
 
       // Fungsi untuk mendeteksi penggunaan AI
       function detectAIUsage() {
+        if (!answerInput) return false;
+
         let aiUsageDetected = false;
         const currentValue = answerInput.value.trim();
         const elapsedTime = Date.now() - startTime;
 
         // Deteksi 1: Waktu menjawab terlalu cepat (kurang dari 3 detik) dengan jawaban benar
-        if (elapsedTime < 3000 && currentValue.length > 0) {
+        if (elapsedTime < 2000 && currentValue.length > 0) {
           if (
             puzzles[currentLevel].alternativeAnswers.includes(
               currentValue.toLowerCase()
@@ -517,13 +409,11 @@
 
         // Deteksi 4: Pola ketikan tidak natural
         if (typingPattern.length > 3) {
-          // Hitung interval ketikan rata-rata
-          let typingIntervals = [];
+          const typingIntervals = [];
           for (let i = 1; i < typingPattern.length; i++) {
             typingIntervals.push(typingPattern[i] - typingPattern[i - 1]);
           }
 
-          // Standard deviation terlalu kecil = terlalu konsisten = kemungkinan copy-paste atau AI
           const avgInterval =
             typingIntervals.reduce((a, b) => a + b, 0) / typingIntervals.length;
           const variance =
@@ -555,27 +445,33 @@
         return aiUsageDetected;
       }
 
-      // Memeriksa jawaban - diperbarui dengan error handling
+      // Memeriksa jawaban
       async function checkAnswer() {
         try {
-          console.log("checkAnswer dipanggil"); // Debug log
+          if (!answerInput) {
+            console.error("Answer input element not found");
+            return;
+          }
 
           // Jika sudah ada pemenang, periksa dulu
-          await checkWinnerStatusFromServer();
+          const winnerExists = await checkWinnerStatus();
 
-          if (hasWinner) {
+          if (winnerExists) {
             alert("Maaf, hadiah sudah dimenangkan oleh pemain lain.");
-            winnerNotice.style.display = "block";
+            if (winnerNotice) {
+              winnerNotice.style.display = "block";
+            }
             return;
           }
 
           const userAnswer = answerInput.value.trim().toLowerCase();
-          console.log("Jawaban user:", userAnswer); // Debug log
 
           // Deteksi penggunaan AI
           if (detectAIUsage()) {
             aiDetectionCount++;
-            aiWarning.style.display = "block";
+            if (aiWarning) {
+              aiWarning.style.display = "block";
+            }
 
             // Jika terdeteksi menggunakan AI terlalu sering
             if (aiDetectionCount >= 3) {
@@ -584,16 +480,11 @@
               );
               return;
             }
-          } else {
+          } else if (aiWarning) {
             aiWarning.style.display = "none";
           }
 
           const currentPuzzle = puzzles[currentLevel];
-          console.log("Level saat ini:", currentLevel); // Debug log
-          console.log(
-            "Jawaban yang diterima:",
-            currentPuzzle.alternativeAnswers
-          ); // Debug log
 
           if (currentPuzzle.alternativeAnswers.includes(userAnswer)) {
             alert("Jawaban Benar! 👏");
@@ -614,34 +505,61 @@
         }
       }
 
-      // Mengirim data ke WhatsApp developer
+      // Mengirim data ke WhatsApp developer dan mengklaim hadiah
       async function sendDataToDeveloper() {
         try {
           // Tampilkan loading spinner
-          submitLoader.style.display = "inline-block";
-          submitClaim.disabled = true;
+          if (submitLoader) {
+            submitLoader.style.display = "inline-block";
+          }
+          if (submitClaim) {
+            submitClaim.disabled = true;
+          }
 
           // Periksa apakah sudah ada pemenang
-          const winnerExists = await checkWinnerStatusFromServer();
+          const winnerExists = await checkWinnerStatus();
 
           if (winnerExists) {
-            submitLoader.style.display = "none";
-            submitClaim.disabled = false;
+            if (submitLoader) {
+              submitLoader.style.display = "none";
+            }
+            if (submitClaim) {
+              submitClaim.disabled = false;
+            }
             alert(
               "Maaf, hadiah sudah dimenangkan oleh pemain lain. Coba lagi lain waktu."
             );
-            claimModal.style.display = "none";
+            if (claimModal) {
+              claimModal.style.display = "none";
+            }
             return;
           }
 
-          const name = document.getElementById("name").value;
-          const phone = document.getElementById("phone").value;
-          const bank = document.getElementById("bank").value;
-          const account = document.getElementById("account").value;
+          const nameInput = document.getElementById("name");
+          const phoneInput = document.getElementById("phone");
+          const bankInput = document.getElementById("bank");
+          const accountInput = document.getElementById("account");
+
+          if (!nameInput || !phoneInput || !bankInput || !accountInput) {
+            console.error("Form input elements not found");
+            alert(
+              "Terjadi kesalahan saat memuat formulir. Silakan muat ulang halaman."
+            );
+            return;
+          }
+
+          const name = nameInput.value;
+          const phone = phoneInput.value;
+          const bank = bankInput.value;
+          const account = accountInput.value;
 
           if (!name || !phone || !bank || !account) {
-            submitLoader.style.display = "none";
-            submitClaim.disabled = false;
+            if (submitLoader) {
+              submitLoader.style.display = "none";
+            }
+            if (submitClaim) {
+              submitClaim.disabled = false;
+            }
             alert("Mohon lengkapi semua data!");
             return;
           }
@@ -655,8 +573,8 @@
             timestamp: Date.now(),
           };
 
-          // Set status pemenang
-          const serverUpdateSuccess = await setWinnerStatusOnServer(winnerData);
+          // Klaim hadiah melalui Firebase
+          claimPrize(winnerData);
 
           // Kirim data ke WhatsApp
           const message = `*Klaim Hadiah Teka-Teki*%0A%0ANama: ${name}%0ANomor WA: ${phone}%0ABank: ${bank}%0ANo Rekening: ${account}%0AHadiah: ${prizeAmount}%0ASession ID: ${gameSessionId}`;
@@ -667,47 +585,88 @@
             "Selamat! Anda adalah pemenang pertama. Data berhasil dikirim! Hadiah Anda akan segera diproses."
           );
 
-          submitLoader.style.display = "none";
-          submitClaim.disabled = false;
-          claimModal.style.display = "none";
+          if (submitLoader) {
+            submitLoader.style.display = "none";
+          }
+          if (submitClaim) {
+            submitClaim.disabled = false;
+          }
+          if (claimModal) {
+            claimModal.style.display = "none";
+          }
 
           // Disable tombol klaim
-          claimButton.disabled = true;
-          claimButton.textContent = "Hadiah Sudah Diklaim";
+          if (claimButton) {
+            claimButton.disabled = true;
+            claimButton.textContent = "Hadiah Sudah Diklaim";
+          }
 
           // Set notice bahwa sudah ada pemenang
-          winnerNotice.style.display = "block";
+          if (winnerNotice) {
+            winnerNotice.style.display = "block";
+          }
         } catch (error) {
           console.error("Error dalam sendDataToDeveloper:", error);
-          submitLoader.style.display = "none";
-          submitClaim.disabled = false;
+          if (submitLoader) {
+            submitLoader.style.display = "none";
+          }
+          if (submitClaim) {
+            submitClaim.disabled = false;
+          }
           alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
         }
       }
 
-      // Event Listeners - dengan lebih banyak error handling
+      // Fungsi untuk mereset status pemenang (untuk testing - hapus di produksi)
+      function resetWinnerStatus() {
+        if (!database) {
+          console.error("Database is not initialized.");
+          return;
+        }
+
+        database
+          .ref("winner")
+          .set({
+            claimed: false,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+          })
+          .then(() => {
+            console.log("Status pemenang berhasil direset");
+            hasWinner = false;
+            localStorage.removeItem("alertShown");
+            if (winnerNotice) {
+              winnerNotice.style.display = "none";
+            }
+            if (claimButton) {
+              claimButton.disabled = false;
+              claimButton.textContent = "Klaim Hadiah";
+            }
+            alert("Status pemenang telah direset untuk testing");
+          })
+          .catch((error) => {
+            console.error("Error saat mereset status pemenang:", error);
+          });
+      }
+
+      // Event listener untuk DOMContentLoaded
       document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM Loaded");
+        console.log("DOM fully loaded");
 
-        // Debug log untuk memastikan semua elemen ditemukan
-        console.log("submitButton:", submitButton);
-        console.log("answerInput:", answerInput);
-        console.log("claimButton:", claimButton);
-
-        // Tambahkan event listener dengan error handling
+        // Make sure elements exist before adding event listeners
         if (submitButton) {
+          console.log("Submit button found, adding event listener");
           submitButton.addEventListener("click", function () {
-            console.log("Submit button diklik");
+            console.log("Submit button clicked");
             checkAnswer();
           });
         } else {
-          console.error("Submit button tidak ditemukan");
+          console.error("Submit button not found in the DOM");
         }
 
         if (answerInput) {
+          console.log("Answer input found, adding event listeners");
           answerInput.addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
-              console.log("Enter key ditekan di input");
               checkAnswer();
             }
 
@@ -719,7 +678,6 @@
 
           // Deteksi paste
           answerInput.addEventListener("paste", function () {
-            console.log("Paste terdeteksi");
             inputChangeMethod = "pasted";
           });
 
@@ -729,69 +687,99 @@
               e.inputType === "insertReplacementText" ||
               (!e.inputType && keyPressCount === 0)
             ) {
-              console.log("Autofill terdeteksi");
               inputChangeMethod = "autofilled";
             }
           });
         } else {
-          console.error("Answer input tidak ditemukan");
+          console.error("Answer input not found in the DOM");
         }
-
-        // Deteksi fokus keluar
-        window.addEventListener("blur", function () {
-          if (document.activeElement !== answerInput) {
-            inputChangeMethod = "suspicious";
-          }
-        });
 
         if (claimButton) {
           claimButton.addEventListener("click", async function () {
-            console.log("Claim button diklik");
             // Periksa lagi status pemenang sebelum membuka modal
-            const winnerExists = await checkWinnerStatusFromServer();
+            try {
+              const winnerExists = await checkWinnerStatus();
 
-            if (winnerExists) {
+              if (winnerExists) {
+                alert(
+                  "Maaf, hadiah sudah dimenangkan oleh pemain lain. Coba lagi lain waktu."
+                );
+                return;
+              }
+              if (claimModal) {
+                claimModal.style.display = "block";
+              }
+            } catch (error) {
+              console.error("Error checking winner status:", error);
               alert(
-                "Maaf, hadiah sudah dimenangkan oleh pemain lain. Coba lagi lain waktu."
+                "Terjadi kesalahan saat memeriksa status pemenang. Silakan coba lagi."
               );
-              return;
             }
-            claimModal.style.display = "block";
           });
         }
 
         if (closeModal) {
           closeModal.addEventListener("click", function () {
-            claimModal.style.display = "none";
+            if (claimModal) {
+              claimModal.style.display = "none";
+            }
           });
         }
 
         if (submitClaim) {
           submitClaim.addEventListener("click", function () {
-            console.log("Submit claim diklik");
             sendDataToDeveloper();
           });
         }
 
-        window.addEventListener("click", function (event) {
-          if (event.target === claimModal) {
-            claimModal.style.display = "none";
+        // Initialize the game on page load
+        try {
+          // Setup Firebase listener untuk status pemenang
+          setupWinnerListener();
+
+          // Inisialisasi
+          startTime = Date.now();
+
+          // Periksa status pemenang dari Firebase saat halaman dimuat
+          checkWinnerStatus().then((winnerExists) => {
+            if (winnerExists) {
+              hasWinner = true;
+              if (winnerNotice) {
+                winnerNotice.style.display = "block";
+              }
+            }
+            updatePuzzle();
+          });
+        } catch (error) {
+          console.error("Error during initialization:", error);
+          if (errorMessage) {
+            errorMessage.textContent =
+              "Terjadi kesalahan saat menginisialisasi permainan. Silakan muat ulang halaman.";
+            errorMessage.style.display = "block";
           }
-        });
+        }
+      });
 
-        // Periksa status pemenang secara berkala (kurangi frekuensi jika tidak menggunakan Firebase)
-        const checkInterval = useFirebase ? 10000 : 30000; // 10 detik dengan Firebase, 30 detik tanpa Firebase
-        setInterval(async function () {
-          await checkWinnerStatusFromServer();
-        }, checkInterval);
+      // Handle click on modal backdrop
+      window.addEventListener("click", function (event) {
+        if (claimModal && event.target === claimModal) {
+          claimModal.style.display = "none";
+        }
+      });
 
-        // Inisialisasi
-        console.log("Inisialisasi aplikasi");
-        startTime = Date.now();
-        // Periksa status pemenang dari server saat halaman dimuat
-        checkWinnerStatusFromServer().then(() => {
-          updatePuzzle();
-        });
+      // Debugging function to check if elements exist
+      function checkElements() {
+        console.log("Checking for critical elements:");
+        console.log("puzzleText exists:", !!puzzleText);
+        console.log("answerInput exists:", !!answerInput);
+        console.log("submitButton exists:", !!submitButton);
+        console.log("errorMessage exists:", !!errorMessage);
+      }
+
+      // Call this on page load for debugging
+      window.addEventListener("load", function () {
+        console.log("Window loaded, checking elements");
+        checkElements();
       });
     </script>
   </body>
